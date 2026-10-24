@@ -118,4 +118,47 @@ export class VehicleService {
     // values go in as ? params so nobody can do sql injection through the query string
     return this.db.prepare(`SELECT * FROM vehicles ${where} ORDER BY id DESC`).all(...params) as Vehicle[];
   }
+
+  purchase(id: number, quantity: unknown = 1): Vehicle {
+    if (
+      typeof quantity !== "number" ||
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) {
+      throw new HttpError(400, "Purchase quantity must be a positive whole number");
+    }
+
+    this.getById(id);
+
+    const result = this.db
+      .prepare(
+        "UPDATE vehicles SET quantity = quantity - ? WHERE id = ? AND quantity >= ?"
+      )
+      .run(quantity, id, quantity);
+
+    if (result.changes === 0) {
+      throw new HttpError(400, "Not enough stock available");
+    }
+
+    return this.getById(id);
+  }
+
+  restock(id: number, quantity: unknown): Vehicle {
+    if (
+      typeof quantity !== "number" ||
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) {
+      throw new HttpError(400, "Restock quantity must be a positive whole number");
+    }
+
+    this.getById(id);
+
+    this.db
+      .prepare("UPDATE vehicles SET quantity = quantity + ? WHERE id = ?")
+      .run(quantity, id);
+
+    return this.getById(id);
+  }
+
 }

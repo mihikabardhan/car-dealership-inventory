@@ -47,5 +47,16 @@ export function vehicleRouter(service: VehicleService) {
     res.status(204).send();
   }));
 
+
+  router.post("/:id/purchase", handle((req, res) => {
+    const vehicle = service.purchase(parseId(req), req.body?.quantity);
+    res.json(vehicle);
+  }));
+
+  router.post("/:id/restock", requireAdmin, handle((req, res) => {
+    const vehicle = service.restock(parseId(req), req.body?.quantity);
+    res.json(vehicle);
+  }));
+
   return router;
 }
