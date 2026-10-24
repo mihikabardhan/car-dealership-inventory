@@ -3,6 +3,14 @@ import { HttpError, Vehicle } from "../types";
 
 const isWholeNumber = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n);
 
+export interface SearchFilters {
+  make?: string;
+  model?: string;
+  category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}
+
 export class VehicleService {
   constructor(private db: DB) {}
 
@@ -74,5 +82,40 @@ export class VehicleService {
     if (result.changes === 0) {
       throw new HttpError(404, "Vehicle not found");
     }
+  }
+
+  search(filters: SearchFilters): Vehicle[] {
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
+
+    // LIKE gives us case-insensitive partial matching for text fields
+    if (filters.make) {
+      conditions.push("make LIKE ?");
+      params.push(`%${filters.make}%`);
+    }
+    if (filters.model) {
+      conditions.push("model LIKE ?");
+      params.push(`%${filters.model}%`);
+    }
+    if (filters.category) {
+      conditions.push("category LIKE ?");
+      params.push(`%${filters.category}%`);
+    }
+    if (filters.minPrice) {
+      const min = Number(filters.minPrice);
+      if (Number.isNaN(min)) throw new HttpError(400, "minPrice must be a number");
+      conditions.push("price >= ?");
+      params.push(min);
+    }
+    if (filters.maxPrice) {
+      const max = Number(filters.maxPrice);
+      if (Number.isNaN(max)) throw new HttpError(400, "maxPrice must be a number");
+      conditions.push("price <= ?");
+      params.push(max);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    // values go in as ? params so nobody can do sql injection through the query string
+    return this.db.prepare(`SELECT * FROM vehicles ${where} ORDER BY id DESC`).all(...params) as Vehicle[];
   }
 }

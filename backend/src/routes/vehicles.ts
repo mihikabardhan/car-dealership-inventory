@@ -29,6 +29,11 @@ export function vehicleRouter(service: VehicleService) {
     res.json(service.getAll());
   }));
 
+  // NOTE: this has to come before any "/:id" route or "search" would be treated as an id
+  router.get("/search", handle((req, res) => {
+    res.json(service.search(req.query as any));
+  }));
+
   router.post("/", handle((req, res) => {
     res.status(201).json(service.create(req.body));
   }));
