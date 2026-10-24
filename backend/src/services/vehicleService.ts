@@ -3,6 +3,38 @@ import { HttpError, Vehicle } from "../types";
 
 const isWholeNumber = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n);
 
+function checkVehicleFields(v: any, operation: "create" | "update"): void {
+  const { make, model, category, price, quantity } = v;
+
+  if (operation === "create") {
+    if (!make || !model || !category || typeof make !== "string" || typeof model !== "string" || typeof category !== "string") {
+      throw new HttpError(400, "make, model and category are required");
+    }
+  } else {
+    for (const field of ["make", "model", "category"] as const) {
+      if (typeof v[field] !== "string" || v[field].trim() === "") {
+        throw new HttpError(400, `${field} must be a non-empty string`);
+      }
+    }
+  }
+
+  if (typeof price !== "number" || price < 0) {
+    throw new HttpError(400, "price must be a number that is 0 or more");
+  }
+  if (!isWholeNumber(quantity) || quantity < 0) {
+    throw new HttpError(400, "quantity must be a whole number that is 0 or more");
+  }
+}
+
+function checkQuantity(
+  quantity: unknown,
+  errorMessage: string
+): asserts quantity is number {
+  if (!isWholeNumber(quantity) || quantity < 1) {
+    throw new HttpError(400, errorMessage);
+  }
+}
+
 export interface SearchFilters {
   make?: string;
   model?: string;
@@ -27,17 +59,8 @@ export class VehicleService {
   }
 
   create(data: any): Vehicle {
+    checkVehicleFields(data, "create");
     const { make, model, category, price, quantity } = data;
-
-    if (!make || !model || !category || typeof make !== "string" || typeof model !== "string" || typeof category !== "string") {
-      throw new HttpError(400, "make, model and category are required");
-    }
-    if (typeof price !== "number" || price < 0) {
-      throw new HttpError(400, "price must be a number that is 0 or more");
-    }
-    if (!isWholeNumber(quantity) || quantity < 0) {
-      throw new HttpError(400, "quantity must be a whole number that is 0 or more");
-    }
 
     const result = this.db
       .prepare("INSERT INTO vehicles (make, model, category, price, quantity) VALUES (?, ?, ?, ?, ?)")
@@ -58,17 +81,7 @@ export class VehicleService {
       quantity: data.quantity ?? current.quantity,
     };
 
-    for (const field of ["make", "model", "category"] as const) {
-      if (typeof next[field] !== "string" || next[field].trim() === "") {
-        throw new HttpError(400, `${field} must be a non-empty string`);
-      }
-    }
-    if (typeof next.price !== "number" || next.price < 0) {
-      throw new HttpError(400, "price must be a number that is 0 or more");
-    }
-    if (!isWholeNumber(next.quantity) || next.quantity < 0) {
-      throw new HttpError(400, "quantity must be a whole number that is 0 or more");
-    }
+    checkVehicleFields(next, "update");
 
     this.db
       .prepare("UPDATE vehicles SET make = ?, model = ?, category = ?, price = ?, quantity = ? WHERE id = ?")
@@ -120,13 +133,7 @@ export class VehicleService {
   }
 
   purchase(id: number, quantity: unknown = 1): Vehicle {
-    if (
-      typeof quantity !== "number" ||
-      !Number.isInteger(quantity) ||
-      quantity <= 0
-    ) {
-      throw new HttpError(400, "Purchase quantity must be a positive whole number");
-    }
+    checkQuantity(quantity, "Purchase quantity must be a positive whole number");
 
     this.getById(id);
 
@@ -144,13 +151,7 @@ export class VehicleService {
   }
 
   restock(id: number, quantity: unknown): Vehicle {
-    if (
-      typeof quantity !== "number" ||
-      !Number.isInteger(quantity) ||
-      quantity <= 0
-    ) {
-      throw new HttpError(400, "Restock quantity must be a positive whole number");
-    }
+    checkQuantity(quantity, "Restock quantity must be a positive whole number");
 
     this.getById(id);
 
