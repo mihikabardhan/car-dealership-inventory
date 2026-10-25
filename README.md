@@ -55,7 +55,7 @@ npm run dev              # http://localhost:5173
 ## My AI Usage
 **Tools:** Claude (Anthropic).
 
-**How I used it:** Claude suggested the stack and project structure and drafted the auth, vehicle CRUD, search, server/seed code and the React frontend. For the inventory feature I wrote the purchase/restock tests myself from written rules, wrote the purchase/restock code with hints from Claude, and did the validation refactor in small steps, running the tests after each one. I ran the app and tested login, search, purchase and admin actions in the browser. Commits where Claude helped carry a Co-authored-by trailer. The full chat is linked in PROMPTS.md.
+**How I used it:** Claude suggested the stack and project structure and drafted the auth, vehicle CRUD, search, server/seed code and the React frontend. For the inventory feature I wrote the purchase/restock tests myself from written rules, wrote the purchase/restock code with hints from Claude, and did the validation refactor in small steps, running the tests after each one. I ran the app and tested login, search, purchase and admin actions in the browser. Commits where Claude helped carry a Co-authored-by trailer.
 
 **Reflection:** AI saved a lot of time on boilerplate and made it easy to follow red-green-refactor. It also handed me code I had to read before I could explain it, so I went through each file and the concepts (JWT, bcrypt, 401 vs 403, SQL injection, race conditions) to be able to discuss them. Writing the inventory tests and code myself taught me more than reading generated code.
 
