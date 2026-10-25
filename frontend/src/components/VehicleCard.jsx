@@ -7,7 +7,7 @@ const badgeColors = {
   hatchback: 'bg-amber-100 text-amber-800',
 }
 
-export default function VehicleCard({ vehicle, onPurchase }) {
+export default function VehicleCard({ vehicle, isAdmin, onPurchase, onEdit, onRestock, onDelete }) {
   const outOfStock = vehicle.quantity === 0
   const badge = badgeColors[vehicle.category.toLowerCase()] || 'bg-gray-100 text-gray-700'
 
@@ -42,6 +42,20 @@ export default function VehicleCard({ vehicle, onPurchase }) {
         >
           {outOfStock ? 'Sold out' : 'Purchase'}
         </button>
+
+        {isAdmin && (
+          <div className="mt-3 flex gap-2 text-sm">
+            <button onClick={onEdit} className="flex-1 border border-gray-300 hover:bg-gray-50 rounded-lg py-1.5">
+              Edit
+            </button>
+            <button onClick={onRestock} className="flex-1 border border-gray-300 hover:bg-gray-50 rounded-lg py-1.5">
+              Restock
+            </button>
+            <button onClick={onDelete} className="flex-1 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg py-1.5">
+              Delete
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
